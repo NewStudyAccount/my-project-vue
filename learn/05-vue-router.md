@@ -143,3 +143,73 @@ onBeforeRouteLeave((to, from, next) => {
 | `this.$route.params.id` | `route.params.id` |
 | `beforeRouteLeave()` | `onBeforeRouteLeave()` |
 | `<router-link>` | `<router-link>`（不变） |
+
+---
+
+## 路由守卫详解
+
+**作用：** 在路由跳转的前后"拦截"，决定是否放行或做额外操作。
+
+### 典型使用场景
+
+#### 1. 权限控制（最常见）
+
+```typescript
+router.beforeEach((to, from, next) => {
+  const isLogin = !!localStorage.getItem('token')
+
+  if (to.meta.requiresAuth && !isLogin) {
+    next('/login')  // 未登录 → 跳登录页
+  } else {
+    next()          // 放行
+  }
+})
+```
+
+#### 2. 未保存提示
+
+```typescript
+// 用户编辑了表单但没保存，离开时弹确认框
+onBeforeRouteLeave((to, from, next) => {
+  if (hasUnsavedChanges.value) {
+    confirm('确定离开？未保存的内容将丢失') ? next() : next(false)
+  } else {
+    next()
+  }
+})
+```
+
+#### 3. 页面标题
+
+```typescript
+router.afterEach((to) => {
+  document.title = to.meta.title || '默认标题'
+})
+```
+
+#### 4. 数据预加载
+
+```typescript
+beforeRouteEnter(to, from, next) {
+  // 进入页面前先加载数据
+  fetchNote(to.params.id).then(data => {
+    next(vm => vm.note = data)
+  })
+}
+```
+
+### 守卫类型
+
+| 类型 | 作用范围 |
+|------|---------|
+| `beforeEach` | 全局，**每次**跳转都触发 |
+| `beforeEnter` | 单个路由配置上 |
+| `onBeforeRouteLeave` | 组件内，离开当前页时 |
+| `onBeforeRouteUpdate` | 组件内，路由参数变化时 |
+
+### 核心概念
+
+就像**门卫**：
+- `next()` → 放行
+- `next('/login')` → 拦截，改道
+- `next(false)` → 拦截，取消跳转
