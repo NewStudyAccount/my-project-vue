@@ -20,7 +20,17 @@ provide('theme', isDark)
 </script>
 
 <template>
-  <el-container class="app-container" :class="{ 'is-dark': isDark }">
+  <!-- 登录页面：全屏显示，无侧边栏 -->
+  <div v-if="route.path === '/login'" class="login-layout" :class="{ 'is-dark': isDark }">
+    <router-view v-slot="{ Component }">
+      <transition name="fade" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </router-view>
+  </div>
+
+  <!-- 主应用布局：带侧边栏 -->
+  <el-container v-else class="app-container" :class="{ 'is-dark': isDark }">
     <el-aside width="240px" class="app-aside">
       <div class="app-logo">
         <h2>Vue 3 学习笔记</h2>
@@ -59,6 +69,18 @@ provide('theme', isDark)
 </template>
 
 <style scoped>
+.login-layout {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f7fa;
+}
+
+.login-layout.is-dark {
+  background-color: #141414;
+}
+
 .app-container {
   height: 100vh;
 }
