@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from 'vue-router'
-import { ref, computed, provide } from 'vue'
+import { computed, provide, onMounted } from 'vue'
 import { useSettingsStore } from './stores/settings'
+import { useAuthStore } from './stores/auth'
 
 const route = useRoute()
 const settingsStore = useSettingsStore()
+const authStore = useAuthStore()
 
 const activeMenu = computed(() => {
   const path = route.path
@@ -17,11 +19,23 @@ const activeMenu = computed(() => {
 
 const isDark = computed(() => settingsStore.theme === 'dark')
 provide('theme', isDark)
+
+// 登录/注册页用全屏布局
+const isFullPage = computed(() =>
+  route.path === '/login' || route.path === '/register'
+)
+
+// 应用启动时，如果有 token 就恢复用户信息
+onMounted(async () => {
+  if (authStore.isLoggedIn) {
+    await authStore.fetchCurrentUser()
+  }
+})
 </script>
 
 <template>
-  <!-- 登录页面：全屏显示，无侧边栏 -->
-  <div v-if="route.path === '/login'" class="login-layout" :class="{ 'is-dark': isDark }">
+  <!-- 登录/注册页面：全屏显示，无侧边栏 -->
+  <div v-if="isFullPage" class="login-layout" :class="{ 'is-dark': isDark }">
     <router-view v-slot="{ Component }">
       <transition name="fade" mode="out-in">
         <component :is="Component" />
